@@ -1,10 +1,12 @@
 #Xây Dựng Dịch Vụ Dành Cho Student
+
 """Các Dịch Vụ Bao Gồm Như Sau:
 - Tạo mới, thay đổi, xoá thông tinh sinh viên: Họ Tên, MSSV, CCCD, Mã Lớp, Phòng Ở, Toà Ở"""
 #tạo đường dẫn file và import
 import os
 import json
-
+from InquirerPy import inquirer
+from InquirerPy.base.control import Choice
 class file_works:
     #tiến hành tạo nếu chưa có file
     def __init__(self, file_path):
@@ -74,17 +76,15 @@ class students_service(file_works):
                 continue
             else:
                 print(f"Đã Ghi Nhận, Dãy Số CCCD Bạn Vừa Nhập Là: {self.cccd}")
-                break
-            
-                # print("Bạn Có Muốn Nhập Lại? (Y/N)")
-                # Yes = True
-                # No = False
-                # if Yes:
-                #     continue
-                # if No:
-                #     break
-                # break
-
+                self.new_data = inquirer.confirm(
+                    message=("Bạn có muốn nhập lại dữ liệu không? "),
+                    default=False
+                ).execute()
+                if self.new_data == True:
+                    continue
+                else:
+                    break
+                
         self.id_class = input("Vui Lòng Nhập Mã Lớp: ")
 
         self.id_room = input("Vui Lòng Nhập Phòng Ở: ")
