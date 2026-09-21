@@ -17,7 +17,7 @@ def save_pw():
 
     os.makedirs(os.path.dirname(FILE_PATH), exist_ok=True)
 
-    if not os.path.exists(FILE_PATH):
+    if os.path.exists(FILE_PATH):
         with open(FILE_PATH, "w", encoding="utf-8") as f:
             json.dump(admin, f, ensure_ascii=False, indent=4)
             print("Đã Lưu Dữ Liệu Thành Công!")
