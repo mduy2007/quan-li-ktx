@@ -1,15 +1,20 @@
-# from service.student_service import students_service
-from service.admin_service import info_student
+# from service.admin_service import info_dorm
+from service.student_service import students_service
 
 if __name__ == "__main__":
-    # info = students_service(file_path="data/info_student.json")
-    # data = info.add_info_student()
+    print("test thêm sinh viên")
+
+    info2 = students_service(file_path="")
+    info2.add_info_student_in_dorm()
+    info2.save_data()
+    
+    
+
+
+    
     # print("Test quá trình lưu pass")
     # print(save_pw())
-    # print("test thêm sinh viên")
-    # print(data)
-
-    data = info_student(file_path="data/dorm.json")
-    nhapktx = data.add_dorm()
-    print("test thêm ktx")
-    print(nhapktx)
+    # data = info_dorm(file_path="data/dorm.json")
+    # nhapktx = data.add_dorm()
+    # print("test thêm ktx")
+    # print(nhapktx)
