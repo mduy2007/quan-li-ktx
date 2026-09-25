@@ -97,7 +97,7 @@ class students_service(file_works):
     
         #đưa lựa chọn từ file vào dict
     def add_info_student_in_dorm(self):
-        self.role = self.add_info_student()
+        self.role = self.add_info_student() #không cần vẫn được, nhưng nguyên tắc là code đã chạy là không động
         self.data_select = []
         self.doc_du_lieu = file_works("data/dorm.json")
         self.lay_du_lieu = self.doc_du_lieu.load_file()
@@ -148,6 +148,7 @@ class students_service(file_works):
     def save_data(self):
         self.dulieu[self.id_student] = {
             'id': self.id_student,
+            'role': self.role,
             'name': self.name_student,
             'id_human': self.cccd,
             'class': self.id_class,

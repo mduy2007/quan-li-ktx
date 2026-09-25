@@ -1,4 +1,4 @@
-from auth.account import Account #nhập class vào
+from auth.account import Account 
 import bcrypt
 import os
 import json
@@ -16,9 +16,10 @@ def save_pw():
     admin = {"pw": hashed,"name_user": name_user}
 
     os.makedirs(os.path.dirname(FILE_PATH), exist_ok=True)
-
-    if os.path.exists(FILE_PATH):
-        with open(FILE_PATH, "w", encoding="utf-8") as f:
-            json.dump(admin, f, ensure_ascii=False, indent=4)
-            print("Đã Lưu Dữ Liệu Thành Công!")
+    
+    
+  #chỉ thêm nếu đã có file, nếu không sẽ không khởi tạo được
+    with open(FILE_PATH, "w", encoding="utf-8") as f:
+        json.dump(admin, f, ensure_ascii=False, indent=4)
+        print("Đã Lưu Dữ Liệu Thành Công!")
     return "đã chạy được!"
