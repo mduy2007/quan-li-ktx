@@ -1,5 +1,6 @@
 from service.admin_service import info_dorm
 from service.student_service import students_service
+from service.change_info import  change
 from service.student_service import file_works 
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
@@ -31,13 +32,29 @@ if __name__ == "__main__":
             print("--MENU--")
             menu = inquirer.fuzzy(
                 message="Vui lòng lựa chọn các chức năng sau: ",
-                choices=[
-                    "1. Thêm Sinh Viên",
-                    "2. Chỉnh sửa Thông Tin Sinh Viên",
-                    "3. Thêm Thông Tin Kí Túc Xá",
-                ],
+                choices=[Choice(value=1, name = '1. thêm sinh viên'),
+                         Choice(value=2, name = '2. chỉnh sửa dữ liệu sinh viên'),
+                         Choice(value=3, name = '3. xoá thông tin sinh viên'),
+                         Choice(value=4, name = '4. Thêm thông tin kí túc xá'),
+                         Choice(value=5, name = '5. Tắt Menu')
+                         ],
                 mandatory=True
             ).execute()
+            if menu == 1:
+                students_service(file_path='').add_info_student_in_dorm()
+                continue
+            if menu == 2:
+                change(file_path='').change_info_student()
+                continue
+            if menu == 3:
+                change(file_path='').delete_info()
+                continue
+            if menu == 4:
+                info_dorm(file_path='').add_dorm()
+                continue
+            if menu == 5:
+                print("Tắt Menu Thành Công")
+                break
     else:
         print("Sai Thông Tin Đăng Nhập!")
 
