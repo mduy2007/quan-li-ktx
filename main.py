@@ -1,86 +1,107 @@
-from service.admin_service import info_dorm
-from service.student_service import students_service
-from service.change_info import  change
-from service.student_service import file_works 
-from service.staff_service import staff
+import bcrypt
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
-import bcrypt
-import os
-import json
-from service.auth_service import save_pw
+
+from service.admin_service import info_dorm
+from service.change_info import change
+from service.student_service import file_works, students_service
+from service.staff_service import staff
+
+
+ADMIN_CREDENTIALS_PATH = "data/important.json"
+
+
+def authenticate_admin() -> bool:
+    """Ask for the admin credentials and verify the stored password hash."""
+    credentials = file_works(ADMIN_CREDENTIALS_PATH).load_file()
+    if not isinstance(credentials, dict):
+        print("Không thể đọc thông tin đăng nhập quản trị.")
+        return False
+
+    username = credentials.get("name_user")
+    password_hash = credentials.get("pw")
+    if not isinstance(username, str) or not isinstance(password_hash, str):
+        print("Thông tin đăng nhập quản trị không hợp lệ.")
+        return False
+
+    print("Xác Thực Quyền ADMIN")
+    entered_username = input("Vui lòng nhập tên đăng nhập: ").strip()
+    entered_password = inquirer.secret(
+        message="Nhập Mật Khẩu: ",
+        mandatory=True,
+    ).execute()
+
+    if entered_username == username and bcrypt.checkpw(
+        entered_password.encode("utf-8"),
+        password_hash.encode("utf-8"),
+    ):
+        return True
+
+    print("Sai Thông Tin Đăng Nhập!")
+    return False
+
+
+def run_admin_menu() -> None:
+    """Show the available management actions and dispatch the selected one."""
+    actions = {
+        "add_student": (
+            "Thêm sinh viên",
+            lambda: students_service("data/info_student.json").add_info_student_in_dorm(),
+        ),
+        "edit_student": (
+            "Chỉnh sửa thông tin sinh viên",
+            lambda: change("data/info_student.json").change_info_student(),
+        ),
+        "delete_student": (
+            "Xóa sinh viên",
+            lambda: change("data/info_student.json").delete_info(),
+        ),
+        "add_dorm": (
+            "Thêm thông tin ký túc xá",
+            lambda: info_dorm("data/dorm.json").add_dorm(),
+        ),
+        "add_staff": (
+            "Thêm nhân viên",
+            lambda: staff("data/staff.json").add_staff(),
+        ),
+        "calculate_salary": (
+            "Tính lương nhân viên",
+            lambda: staff("data/staff.json").salary(),
+        ),
+    }
+
+    choices = [
+        Choice(value=action, name=label)
+        for action, (label, _) in actions.items()
+    ]
+    choices.append(Choice(value="exit", name="Thoát"))
+
+    while True:
+        selected_action = inquirer.select(
+            message="Vui lòng chọn chức năng:",
+            choices=choices,
+            mandatory=True,
+        ).execute()
+
+        if selected_action == "exit":
+            print("Đã thoát chương trình.")
+            return
+
+        _, run_action = actions[selected_action]
+        run_action()
+
+
+def main() -> None:
+    print(
+        """
+╔══════════════════════════════════════════════╗
+║   TOOL QUẢN LÝ SINH VIÊN KÝ TÚC XÁ          ║
+╚══════════════════════════════════════════════╝
+"""
+    )
+    if authenticate_admin():
+        run_admin_menu()
 
 
 if __name__ == "__main__":
-#     # print("test full")
-#     print("""
-# ╔══════════════════════════════════════════════╗
-# ║   TOOL QUẢN LÍ SINH VIÊN KÍ TÚC XÁ           ║
-# ╚══════════════════════════════════════════════╝
-# """)
-#     # save_pw()
-#     print("Xác Thực Quyền ADMIN")
-#     give_data = file_works(file_path="data/important.json")
-#     load_pw = give_data.load_file()
-
-#     name = input("Vui lòng nhập tên đăng nhập: ")
-#     raw = inquirer.secret(
-#         message="Nhập Mật Khẩu: ",
-#         mandatory=True
-#     ).execute()
-    
-#     password = raw.encode('utf-8')
-#     pw = load_pw['pw'].encode('utf-8')
-#     if name == load_pw['name_user'] and bcrypt.checkpw(password, pw):
-
-#         while True:
-#             print("--MENU--")
-#             menu = inquirer.fuzzy(
-#                 message="Vui lòng lựa chọn các chức năng sau: ",
-#                 choices=[Choice(value=1, name = '1. thêm sinh viên'),
-#                          Choice(value=2, name = '2. chỉnh sửa dữ liệu sinh viên'),
-#                          Choice(value=3, name = '3. xoá thông tin sinh viên'),
-#                          Choice(value=4, name = '4. Thêm thông tin kí túc xá'),
-#                          Choice(value=5, name = '5. Tắt Menu')
-#                          ],
-#                 mandatory=True
-#             ).execute()
-#             if menu == 1:
-#                 students_service(file_path='').add_info_student_in_dorm()
-#                 continue
-#             if menu == 2:
-#                 change(file_path='').change_info_student()
-#                 continue
-#             if menu == 3:
-#                 change(file_path='').delete_info()
-#                 continue
-#             if menu == 4:
-#                 info_dorm(file_path='').add_dorm()
-#                 continue
-#             if menu == 5:
-#                 print("Tắt Menu Thành Công")
-#                 break
-#     else:
-#         print("Sai Thông Tin Đăng Nhập!")
-
-    print("test lưu staff")
-    staff(file_path='').add_staff()
-
-
-
-
-
-
-
-
-
-
-    # info2 = students_service(file_path="")
-    # info2.add_info_student_in_dorm()
-    # info2.save_data()
-    # print("Test quá trình lưu pass")
-    # print(save_pw())
-    # data = info_dorm(file_path="data/dorm.json")
-    # nhapktx = data.add_dorm()
-    # print("test thêm ktx")
-    # print(nhapktx)
+    main()
