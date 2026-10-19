@@ -98,9 +98,20 @@ class students_service(file_works):
         #đưa lựa chọn từ file vào dict
     def add_info_student_in_dorm(self):
         self.role = self.add_info_student() #không cần vẫn được, nhưng nguyên tắc là code đã chạy là không động
+        # print("DEBUG role =", ascii(self.role))
         self.data_select = []
         self.doc_du_lieu = file_works("data/dorm.json")
         self.lay_du_lieu = self.doc_du_lieu.load_file()
+            # print("DEBUG dorm path =", os.path.abspath(self.doc_du_lieu.file_path))
+            # print(
+            #     "DEBUG roles in file =",
+            #     sorted({
+            #         ascii(room.get("role"))
+            #         for rooms in self.lay_du_lieu.values()
+            #         if isinstance(rooms, list)
+            #         for room in rooms
+            #     })
+            # )
         #dòng debug tạm thời
         if self.lay_du_lieu is None:
             self.lay_du_lieu = {}
@@ -116,6 +127,7 @@ class students_service(file_works):
                             "value": f"{vlue['id_dorm']} - {vlue['id_room']}"
                         }
                     )
+                # print("DEBUG room choices =", len(self.data_select), self.data_select[:3])
 
         if self.data_select:
             self.id_dorm = inquirer.fuzzy(

@@ -33,6 +33,9 @@ class info_dorm(file_works):
         self.dorm_phase1 = ["G", self.ki_tuc_xa]
         self.dorm_phase2 = "".join(map(str,self.dorm_phase1))
 
+        # if self.dorm_phase2 in self.data:
+        #     print(f"Toà {self.dorm_phase2} Đã Tồn Tại Trong Hệ Thống!")
+        #     return
 
         #thêm số tầng
         self.floor = inquirer.number (
