@@ -4,11 +4,11 @@ mã nhân viên: bắt đầu từ KTX00 (3 số tiếp theo theo thứ tự t�
 vị trí làm việc: Quản Lí, Trực Ban, ban Kỷ Luật, buôn bán canteen, bảo vệ, lao công
 lương:                           | Ngày làm việc|    Giờ Làm Việc
 - Quản Lí: 19.871.270 vnđ        |   24 days    |        8h
-- Trực Ban: 18.872.000 vnđ       |   30 days    |        6h
-- ban kỷ luật: 9.821.092         |   30 days    |        6h
+- Trực Ban: 18.872.000 vnđ       |   30 days    |        8h
+- ban kỷ luật: 9.821.092         |   30 days    |        8h
 - buôn bán canteen: 6.982.000    |   30 days    |        8h
 - Bảo Vệ: 11.982.021             |   30 days    |        12h
-- Lao Công: 5.981.721            |   30 days    |        6h
+- Lao Công: 5.981.721            |   30 days    |        8h
 công thức tính giờ lương:
 Lương 1h = (Lương Tháng)
             -----------  / số giờ làm việc
@@ -25,6 +25,17 @@ from InquirerPy.base.control import Choice
 import locale
 import os
 import time
+class Error(Exception):  #cấu hình lỗi
+    """Lớp cha cho tất cả các ngoại lệ cụ thể"""
+    pass
+
+class LoiDinhDang(Error):
+    """Lớp con cho các lỗi định dạng đầu vào"""
+    pass
+
+class staff_Error(Error):
+     """"Lớp con cho lỗi tính lương nhân viên lặp"""
+     pass
 
 class staff(file_works):
      def __init__(self, file_path):
@@ -112,121 +123,130 @@ class staff(file_works):
 
           #Tính toán lương tháng và lưu vào salary/ xxxx.json
           staff = []
-          count = 1
           for key, i in self.load_data.items():
-                    staff.append(
-                         {
-                         'name': f"Tên: {i['name_staff']}   |   Công Việc: {i['role']}",
-                         'value': count
-                         }
-                    )
-                    count  += 1
+               staff.append(
+                    {
+                    'name': f"Tên: {i['name_staff']}   |   Công Việc: {i['role']}",
+                    'value': key
+                    }
+               )
 
           ket_toan = inquirer.fuzzy(
                message="Chọn Vị Trí Cần Kết Toán Lương:",
                choices=[*staff,
-                         Choice(value=-1,name='Tất Cả'),
+                         Choice(value=-1,name='Tất Cả(Lưu ý: Tính tất cả sẽ bỏ qua OT)'),
                          Choice(value=-2,name='Thoát')
                          ],
                mandatory=True,
                default=0
           ).execute()
+          #Xác nhận xem nhân viên đã được kết toán lương chưa, nếu đã kết toán thì sẽ báo lỗi và không cho kết toán nữa
+          if self.load_salary is not None:
+               for i in self.load_salary:
+                    if i['Name'] == self.load_data[str(ket_toan)]['name_staff'] and i['Role'] == self.load_data[str(ket_toan)]['role']:
+                         raise staff_Error(f'Nhân Viên {self.load_data[str(ket_toan)]["name_staff"]} Đã Được Kết Toán Lương Trong Tháng Này!')
 
           he_so_ot = {
                1: 150,
                2: 200,
                3: 310
           }
-
-          count_data = 1
+          
           for k in dict_salary.keys():
                found = False
-               if str(k) == self.load_data[str(ket_toan)]['role']:
-                    #Nhập ngày thực làm
-                    while True:
-                         try:
-                              days = int(input('Nhập Số Ngày Thực Làm: '))
-                         except ValueError:
-                              print("Số Ngày Không Hợp Lệ!")
-                              continue
-                         if days < 0 or days > 31:
-                              print("Số ngày đi làm không hợp lệ")
-                              continue
-                         else:
-                              break
-                         
-                    for key,v in dict_salary.items():
-                         if key == self.load_data[str(ket_toan)]['role']:
-                              one_h = (v / 24) / 8  #lương 1h
-                              salary_role = (one_h * 8) * days
+               try:
+                    if str(k) == self.load_data[str(ket_toan)]['role']:
+                         #Nhập ngày thực làm
+                         while True:
+                              try:
+                                   days = int(input('Nhập Số Ngày Thực Làm: '))
+                              except ValueError:
+                                   print("Số Ngày Không Hợp Lệ!")
+                                   continue
+                              if days < 0 or days > 31:
+                                   print("Số ngày đi làm không hợp lệ")
+                                   continue
+                              else:
+                                   break
+                              
+                         for key,v in dict_salary.items():
+                              if key == self.load_data[str(ket_toan)]['role']:
+                                   one_h = (v / 24) / 8  #lương 1h
+                                   salary_role = (one_h * 8) * days
+                                   tong_luong_sau_chuyen_doi = locale.currency(salary_role, symbol=False, grouping=True)
+                                   print(f"Lương Cơ Bản Của Nhân Viên {self.load_data[str(ket_toan)]['name_staff']}   |   Vị Trí {self.load_data[str(ket_toan)]['role']}: {tong_luong_sau_chuyen_doi}")
+                         while True:
+                              ot = inquirer.fuzzy(
+                                   message='Vui Lòng Chọn Loại OT[Lưu ý: Bảo Vệ Không Được OT]:',
+                                   choices=[Choice(value=1, name='Ngày Thường'),
+                                        Choice(value=2, name='Ngày Nghỉ'),
+                                        Choice(value=3, name='Lễ Tết'),
+                                        Choice(value=4, name='Không Có')],
+                                        mandatory=True
+                              ).execute()
+
+                              if ot == 4:
+                                   break
+                              
+                              time_ot = float(input("Nhập số giờ OT: "))
+                              if time_ot < 0 or time_ot > 40:
+                                   raise LoiDinhDang('Số giờ OT không hợp lệ')
+                              
+                              one_h_OT = (one_h * he_so_ot[ot]) / 100
+                              salary_role += one_h_OT * time_ot
                               tong_luong_sau_chuyen_doi = locale.currency(salary_role, symbol=False, grouping=True)
-                              print(f"Lương Cơ Bản Của Nhân Viên {self.load_data[str(ket_toan)]['name_staff']}   |   Vị Trí {self.load_data[str(ket_toan)]['role']}: {tong_luong_sau_chuyen_doi}")
-                    while True:
-                         ot = inquirer.fuzzy(
-                              message='Vui Lòng Chọn Loại OT',
-                              choices=[Choice(value=1, name='Ngày Thường'),
-                                   Choice(value=2, name='Ngày Nghỉ'),
-                                   Choice(value=3, name='Lễ Tết'),
-                                   Choice(value=4, name='Không Có')],
+                              
+                                                            
+                              cf = inquirer.confirm(
+                                   message='Tiếp tục chọn?',
+                                   default=False,
                                    mandatory=True
-                         ).execute()
-
-                         if ot == 4:
-                              break
-                         
-                         time_ot = float(input("Nhập số giờ OT: "))
-                         
-                         one_h_OT = (one_h * he_so_ot[ot]) / 100
-                         salary_role += one_h_OT * time_ot
-                         tong_luong_sau_chuyen_doi = locale.currency(salary_role, symbol=False, grouping=True)
-                         
-                                                       
-                         cf = inquirer.confirm(
-                              message='Tiếp tục chọn?',
-                              default=False,
-                              mandatory=True
-                         ).execute()
-                         if cf is False:
-                              found = True
-                              break
-               
-                    self.du_lieu_tong.append(
-                         {
-                              'Name': self.load_data[str(count_data)]['name_staff'],
-                              'Role': self.load_data[str(count_data)]['role'],
-                              'Salary': tong_luong_sau_chuyen_doi
-                         }
-                    )      
-                    if count > count_data:
-                         count_data += 1
-                    #luu vào file
-                    self.data_salary.save_file(self.du_lieu_tong)
-               elif ket_toan == -1:
-                    for keys, values in dict_salary.items():
-                         for khoa, gia_tri in self.load_data.items():
-                              if gia_tri['role'] == keys:
-                                   ten = (input(f'Vui lòng nhập số ngày làm cho nhân viên {gia_tri['name']}   |    Vị trí {gia_tri['role']}: '))
-
-                                   if not isinstance(ten, (float, int)):
-                                        raise ValueError('định dạng đầu vào không hợp lệ')
-                                   
-                                   one_h = (values / 24) / 8
-                                   luong = (one_h * 8) * ten
-                                   tong_luong_sau_chuyen_doi = locale.currency(luong, symbol=False, grouping=True)
-
-                                   self.du_lieu_tong.append(
-                                        {
-                                             'Name': gia_tri['name_staff'],
-                                             'Role': gia_tri['role'],
-                                             'Salary': tong_luong_sau_chuyen_doi
-                                        }
-                                   )         
-                                   self.data_salary.save_file(self.du_lieu_tong)
-          
-               elif ket_toan == -2:
+                              ).execute()
+                              if cf is False:
+                                   found = True   #nếu không chọn OT nữa thì chuyển cờ thành True để báo là đã tính lương thành công
+                                   break
+                         self.du_lieu_tong = self.load_salary if self.load_salary else [] #nếu file salary/xxxx.json chưa có dữ liệu thì tạo list rỗng để lưu dữ liệu mới vào, nếu đã có dữ liệu thì nạp dữ liệu cũ vào để thêm dữ liệu mới vào(chỉ áp dụng khi nội bộ dưới 200 nhân viên)
+                         self.du_lieu_tong.append(
+                              {
+                                   'Name': self.load_data[ket_toan]['name_staff'],
+                                   'Role': self.load_data[ket_toan]['role'],
+                                   'Salary': tong_luong_sau_chuyen_doi
+                              }
+                         )      
+                         #luu vào file
+                         self.data_salary.save_file(self.du_lieu_tong)
+               except KeyError:    #nếu user chọn tất cả thì sẽ bị lỗi keyerror nên phải dùng try except để bỏ qua
                     break
 
-               elif found:
-                    break
+          if ket_toan == -1:
+               for keys, values in dict_salary.items():
+                    for khoa, gia_tri in self.load_data.items():
+                         if gia_tri['role'] == keys:
+                              try:
+                                   ten = float(input(f'Vui lòng nhập số ngày làm cho nhân viên {gia_tri['name_staff']}   |    Vị trí {gia_tri['role']}: '))
+                              except ValueError:
+                                   raise LoiDinhDang('Định dạng đầu vào không hợp lệ')
+                              if ten < 0 or ten > 31:
+                                   raise LoiDinhDang('Số ngày làm không hợp lệ')
+                              
+                              one_h = (values / 24) / 8
+                              luong = (one_h * 8) * ten
+                              tong_luong_sau_chuyen_doi = locale.currency(luong, symbol=False, grouping=True)
+                              found = True   #chuyển cờ thành giá trị True để báo là đã tính lương thành công
+
+                              self.du_lieu_tong.append(
+                                   {
+                                        'Name': gia_tri['name_staff'],
+                                        'Role': gia_tri['role'],
+                                        'Salary': tong_luong_sau_chuyen_doi
+                                   }
+                              )         
+                              self.data_salary.save_file(self.du_lieu_tong)
+     
+          elif ket_toan == -2:
+               print("Thoát Chương Trình Kết Toán Thành Công!")
+
+          elif found:
+               print("Kết Toán Lương Thành Công!")
 
          
