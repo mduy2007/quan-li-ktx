@@ -10,6 +10,25 @@ from service.staff_service import staff
 
 ADMIN_CREDENTIALS_PATH = "data/important.json"
 
+def setup_admin_credentials():
+    """Chỉ chạy 1 lần, sau đó xoá hàm này đi, để tránh lộ thông tin đăng nhập quản trị."""
+    print("Thiết lập thông tin đăng nhập quản trị.")
+    name_user = input("Vui lòng nhập tên đăng nhập: ").strip()
+    password = inquirer.secret(
+        message="Nhập Mật Khẩu: ",
+        mandatory=True,
+    ).execute()
+
+    # Hash the password before storing it
+    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+    credentials = {
+        "name_user": name_user,
+        "pw": password_hash,
+    }
+    file_works(ADMIN_CREDENTIALS_PATH).save_file(credentials)
+    return
+
 
 def authenticate_admin() -> bool:
     """Ask for the admin credentials and verify the stored password hash."""
